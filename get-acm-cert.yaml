@@ -1,0 +1,27 @@
+- hosts: local
+  gather_facts: yes
+  become_user: ubuntu
+  vars:
+    cert_path: /home/ubuntu
+    domain_name: "internal"
+    cert_name: "{{ domain_name }}"
+  tasks:
+    - name: Get certificate for domain
+      community.aws.aws_acm_info:
+        region: "us-east-1"
+        domain_name: "{{ domain_name }}"
+      register: certs
+
+    - name: Printing certs
+      debug:
+        msg: "{{ certs.certificates[0].certificate }}"
+
+    - name: Create cert
+      copy:
+        content: "{{ certs.certificates[0].certificate }}"
+        dest: "{{ cert_path }}/{{ cert_name }}.crt"
+
+    - name: Create cert chain
+      copy:
+        content: "{{ certs.certificates[0].certificate_chain }}"
+        dest: "{{ cert_path }}/{{ cert_name }}-fullchain.crt"
